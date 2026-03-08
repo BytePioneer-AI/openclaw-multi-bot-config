@@ -1,0 +1,17 @@
+{
+  "channels": {
+    "custom-chat": {
+      "enabled": true,
+      "defaultAccount": "alpha",
+      "accounts": {
+        "alpha": {
+          "appKey": "alpha-key",
+          "appSecret": "alpha-secret",
+          "region": "cn"
+        }
+      }
+    }
+  },
+  "bindings": [],
+  "session": {}
+}

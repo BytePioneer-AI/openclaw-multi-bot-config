@@ -1,0 +1,31 @@
+{
+  "version": "1",
+  "action": "preview",
+  "configPath": "C:\\Users\\Administrator\\.openclaw\\openclaw.json",
+  "operation": "modify-existing-channel",
+  "targets": [
+    {
+      "channel": "custom-chat",
+      "mode": "shared-agent",
+      "accounts": [
+        {
+          "accountId": "beta",
+          "credentials": {
+            "appKey": "beta-key",
+            "appSecret": "beta-secret",
+            "region": "cn"
+          }
+        }
+      ]
+    }
+  ],
+  "sessionPolicy": {
+    "mode": "preserve"
+  },
+  "options": {
+    "createBackup": true,
+    "preserveUnknownFields": true,
+    "allowBindingOverride": false,
+    "allowAgentWorkspaceReuse": true
+  }
+}

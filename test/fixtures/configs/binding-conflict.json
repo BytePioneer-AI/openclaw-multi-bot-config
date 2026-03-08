@@ -1,0 +1,35 @@
+{
+  "channels": {
+    "dingtalk": {
+      "enabled": true,
+      "defaultAccount": "main",
+      "accounts": {
+        "main": {
+          "clientId": "main-id",
+          "clientSecret": "main-secret"
+        }
+      }
+    }
+  },
+  "agents": {
+    "list": [
+      {
+        "id": "legacy-agent",
+        "default": true,
+        "workspace": "C:\\Users\\Administrator\\.openclaw\\workspace-legacy-agent"
+      }
+    ]
+  },
+  "bindings": [
+    {
+      "agentId": "legacy-agent",
+      "match": {
+        "channel": "dingtalk",
+        "accountId": "main"
+      }
+    }
+  ],
+  "session": {
+    "dmScope": "per-account-channel-peer"
+  }
+}

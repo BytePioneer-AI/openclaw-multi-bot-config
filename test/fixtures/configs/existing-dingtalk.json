@@ -1,0 +1,29 @@
+{
+  "channels": {
+    "dingtalk": {
+      "enabled": true,
+      "enableAICard": false,
+      "defaultAccount": "main",
+      "accounts": {
+        "main": {
+          "clientId": "existing-main-id",
+          "clientSecret": "existing-main-secret",
+          "label": "preserve-me"
+        }
+      }
+    }
+  },
+  "agents": {
+    "list": [
+      {
+        "id": "default-agent",
+        "default": true,
+        "workspace": "C:\\Users\\Administrator\\.openclaw\\workspace-default-agent"
+      }
+    ]
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "bindings": []
+}

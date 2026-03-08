@@ -1,0 +1,51 @@
+{
+  "version": "1",
+  "action": "preview",
+  "configPath": "C:\\Users\\Administrator\\.openclaw\\openclaw.json",
+  "operation": "add-channel",
+  "targets": [
+    {
+      "channel": "dingtalk",
+      "mode": "isolated-agents",
+      "defaultAccount": "main",
+      "accounts": [
+        {
+          "accountId": "main",
+          "credentials": {
+            "clientId": "main-id",
+            "clientSecret": "main-secret"
+          },
+          "agentRef": "ding-main"
+        },
+        {
+          "accountId": "work",
+          "credentials": {
+            "clientId": "work-id",
+            "clientSecret": "work-secret"
+          },
+          "agentRef": "ding-work"
+        }
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "id": "ding-main",
+      "default": true,
+      "workspaceMode": "auto"
+    },
+    {
+      "id": "ding-work",
+      "workspaceMode": "auto"
+    }
+  ],
+  "sessionPolicy": {
+    "mode": "recommended"
+  },
+  "options": {
+    "createBackup": true,
+    "preserveUnknownFields": true,
+    "allowBindingOverride": false,
+    "allowAgentWorkspaceReuse": true
+  }
+}

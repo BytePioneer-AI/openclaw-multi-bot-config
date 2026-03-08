@@ -1,0 +1,7 @@
+interface:
+  display_name: "OpenClaw 机器人配置"
+  short_description: "规划并安全写入 OpenClaw 多机器人配置"
+  default_prompt: "Use $openclaw-bot-config to add or update multi-account and multi-agent routing in my OpenClaw config."
+
+policy:
+  allow_implicit_invocation: true

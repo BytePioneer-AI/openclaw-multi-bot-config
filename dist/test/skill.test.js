@@ -1,0 +1,143 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
+import os from "node:os";
+import { fileURLToPath } from "node:url";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { loadRequest } from "../src/lib/request.js";
+import { generatePlan } from "../src/lib/planner.js";
+import { readJsonFile, writeJsonFileAtomic } from "../src/lib/files.js";
+import { validatePlan } from "../src/lib/validator.js";
+import { mergeConfig } from "../src/lib/merge.js";
+import { applyPlan, rollbackConfig } from "../src/lib/apply.js";
+const execFileAsync = promisify(execFile);
+const testRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../test/fixtures");
+const skillRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+async function loadFixtureJson(...parts) {
+    return readJsonFile(path.join(testRoot, ...parts), "INVALID_REQUEST");
+}
+test("shared-agent planning preserves existing channel fields and avoids bindings", async () => {
+    const requestFixture = await loadFixtureJson("requests", "request-shared.json");
+    const config = await loadFixtureJson("configs", "existing-dingtalk.json");
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-shared-"));
+    const configPath = path.join(tempDir, "openclaw.json");
+    await writeJsonFileAtomic(configPath, config);
+    const requestPath = path.join(tempDir, "request.json");
+    await writeJsonFileAtomic(requestPath, { ...requestFixture, configPath });
+    const { request, issues } = await loadRequest(requestPath);
+    assert.equal(issues.length, 0);
+    const plan = await generatePlan(request, config);
+    assert.equal(plan.summary.dmScope, "per-account-channel-peer");
+    assert.equal(plan.resolved.bindings.length, 0);
+    assert.equal(plan.patch.channels?.dingtalk?.accounts?.main?.label, "preserve-me");
+    assert.equal(plan.patch.channels?.dingtalk?.accounts?.work?.clientId, "work-id");
+});
+test("isolated-agent planning generates agents and stable bindings", async () => {
+    const requestFixture = await loadFixtureJson("requests", "request-isolated.json");
+    const config = await loadFixtureJson("configs", "empty-openclaw.json");
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-isolated-"));
+    const configPath = path.join(tempDir, "openclaw.json");
+    await writeJsonFileAtomic(configPath, config);
+    const requestPath = path.join(tempDir, "request.json");
+    await writeJsonFileAtomic(requestPath, { ...requestFixture, configPath });
+    const { request, issues } = await loadRequest(requestPath);
+    assert.equal(issues.length, 0);
+    const plan = await generatePlan(request, config);
+    assert.equal(plan.resolved.agents.length, 2);
+    assert.equal(plan.resolved.bindings.length, 2);
+    assert.deepEqual(plan.summary.bindings.map((binding) => `${binding.channel}:${binding.accountId}:${binding.agentId}`), ["dingtalk:main:ding-main", "dingtalk:work:ding-work"]);
+    const mergedOnce = mergeConfig(config, plan);
+    const mergedTwice = mergeConfig(mergedOnce, plan);
+    assert.deepEqual(mergedOnce, mergedTwice);
+});
+test("existing unregistered channel is handled in compatibility mode", async () => {
+    const requestFixture = await loadFixtureJson("requests", "request-unregistered-existing.json");
+    const config = await loadFixtureJson("configs", "existing-unregistered.json");
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-compat-"));
+    const configPath = path.join(tempDir, "openclaw.json");
+    await writeJsonFileAtomic(configPath, config);
+    const requestPath = path.join(tempDir, "request.json");
+    await writeJsonFileAtomic(requestPath, { ...requestFixture, configPath });
+    const { request, issues } = await loadRequest(requestPath);
+    assert.equal(issues.length, 0);
+    const plan = await generatePlan(request, config);
+    assert.equal(plan.errors.length, 0);
+    assert.equal(plan.resolved.targets[0]?.compatibilityMode, true);
+    assert.equal(plan.patch.channels?.["custom-chat"]?.accounts?.beta?.region, "cn");
+});
+test("validation blocks binding conflicts", async () => {
+    const requestFixture = await loadFixtureJson("requests", "request-binding-conflict.json");
+    const config = await loadFixtureJson("configs", "binding-conflict.json");
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-conflict-"));
+    const configPath = path.join(tempDir, "openclaw.json");
+    await writeJsonFileAtomic(configPath, config);
+    const requestPath = path.join(tempDir, "request.json");
+    await writeJsonFileAtomic(requestPath, { ...requestFixture, configPath });
+    const { request, issues } = await loadRequest(requestPath);
+    assert.equal(issues.length, 0);
+    const plan = await generatePlan(request, config);
+    const validation = await validatePlan(plan, config);
+    assert.equal(validation.issues.some((entry) => entry.code === "PLAN_CONFLICT"), true);
+});
+test("new unregistered channels are rejected during planning", async () => {
+    const requestFixture = await loadFixtureJson("requests", "request-invalid-new-channel.json");
+    const config = await loadFixtureJson("configs", "empty-openclaw.json");
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-invalid-"));
+    const configPath = path.join(tempDir, "openclaw.json");
+    await writeJsonFileAtomic(configPath, config);
+    const requestPath = path.join(tempDir, "request.json");
+    await writeJsonFileAtomic(requestPath, { ...requestFixture, configPath });
+    const { request, issues } = await loadRequest(requestPath);
+    assert.equal(issues.length, 0);
+    const plan = await generatePlan(request, config);
+    assert.equal(plan.errors.some((entry) => entry.code === "CHANNEL_UNSUPPORTED"), true);
+});
+test("apply creates a backup and rollback restores the original file", async () => {
+    const requestFixture = await loadFixtureJson("requests", "request-isolated.json");
+    const config = await loadFixtureJson("configs", "empty-openclaw.json");
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-apply-"));
+    const configPath = path.join(tempDir, "openclaw.json");
+    await writeJsonFileAtomic(configPath, config);
+    const requestPath = path.join(tempDir, "request.json");
+    await writeJsonFileAtomic(requestPath, { ...requestFixture, configPath });
+    const { request } = await loadRequest(requestPath);
+    const plan = await generatePlan(request, config);
+    const planPath = path.join(tempDir, "plan.json");
+    await writeJsonFileAtomic(planPath, plan);
+    const applyResult = await applyPlan(plan, configPath);
+    assert.equal(applyResult.ok, true);
+    const appliedConfig = await readJsonFile(configPath);
+    assert.equal(appliedConfig.channels?.dingtalk?.accounts?.work?.clientId, "work-id");
+    assert.ok(applyResult.data?.backupPath);
+    const rollbackResult = await rollbackConfig(configPath, String(applyResult.data?.backupPath));
+    assert.equal(rollbackResult.ok, true);
+    const rolledBackConfig = await readJsonFile(configPath);
+    assert.deepEqual(rolledBackConfig, config);
+});
+test("copied skill directory can still execute plan_config wrapper", async () => {
+    const requestFixture = await loadFixtureJson("requests", "request-isolated.json");
+    const config = await loadFixtureJson("configs", "empty-openclaw.json");
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-copy-"));
+    const copiedSkillRoot = path.join(tempDir, "skills", "openclaw-bot-config");
+    await fs.cp(skillRoot, copiedSkillRoot, {
+        recursive: true,
+        filter: (source) => !source.includes(`${path.sep}test${path.sep}`)
+    });
+    const configPath = path.join(tempDir, "openclaw.json");
+    const requestPath = path.join(tempDir, "request.json");
+    const planPath = path.join(tempDir, "plan.json");
+    await writeJsonFileAtomic(configPath, config);
+    await writeJsonFileAtomic(requestPath, { ...requestFixture, configPath });
+    const wrapperPath = path.join(copiedSkillRoot, "scripts", "plan_config.mjs");
+    const { stdout } = await execFileAsync(process.execPath, [wrapperPath, "--request", requestPath, "--config", configPath, "--out", planPath], {
+        cwd: copiedSkillRoot
+    });
+    const output = JSON.parse(stdout);
+    assert.equal(output.ok, true);
+    assert.equal(output.data?.planPath, planPath);
+    const copiedPlan = await readJsonFile(planPath);
+    assert.equal(copiedPlan.summary.channels[0]?.channel, "dingtalk");
+});
+//# sourceMappingURL=skill.test.js.map

@@ -1,0 +1,38 @@
+{
+  "version": "1",
+  "action": "preview",
+  "configPath": "C:\\Users\\Administrator\\.openclaw\\openclaw.json",
+  "operation": "modify-existing-channel",
+  "targets": [
+    {
+      "channel": "dingtalk",
+      "mode": "shared-agent",
+      "defaultAccount": "main",
+      "accounts": [
+        {
+          "accountId": "main",
+          "credentials": {
+            "clientId": "updated-main-id",
+            "clientSecret": "updated-main-secret"
+          }
+        },
+        {
+          "accountId": "work",
+          "credentials": {
+            "clientId": "work-id",
+            "clientSecret": "work-secret"
+          }
+        }
+      ]
+    }
+  ],
+  "sessionPolicy": {
+    "mode": "recommended"
+  },
+  "options": {
+    "createBackup": true,
+    "preserveUnknownFields": true,
+    "allowBindingOverride": false,
+    "allowAgentWorkspaceReuse": true
+  }
+}

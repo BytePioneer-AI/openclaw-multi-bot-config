@@ -1,0 +1,29 @@
+{
+  "version": "1",
+  "action": "preview",
+  "configPath": "C:\\Users\\Administrator\\.openclaw\\openclaw.json",
+  "operation": "add-channel",
+  "targets": [
+    {
+      "channel": "mystery-channel",
+      "mode": "shared-agent",
+      "accounts": [
+        {
+          "accountId": "main",
+          "credentials": {
+            "secret": "value"
+          }
+        }
+      ]
+    }
+  ],
+  "sessionPolicy": {
+    "mode": "preserve"
+  },
+  "options": {
+    "createBackup": true,
+    "preserveUnknownFields": true,
+    "allowBindingOverride": false,
+    "allowAgentWorkspaceReuse": true
+  }
+}
