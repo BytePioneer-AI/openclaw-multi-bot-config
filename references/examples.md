@@ -8,39 +8,35 @@ User intent:
 
 Expected shape:
 
-- channel: `dingtalk`
-- mode: `shared-agent`
-- accounts: `main`, `work`
-- no account-level bindings
-- recommended `dmScope`: `per-account-channel-peer`
+- one shared agent
+- raw `channels.dingtalk` patch with the real channel fields
+- no separate `bindings`
+- recommended `session.dmScope`: `per-account-channel-peer`
 
 ## Example 2: Isolated agents
 
 User intent:
 
-`给钉钉 main 和 work 两个账号各配一个独立 agent。`
+`给钉钉两个机器人各配一个独立 agent。`
 
 Expected shape:
 
-- channel: `dingtalk`
-- mode: `isolated-agents`
-- accounts: `main`, `work`
-- agents: `ding-main`, `ding-work`
-- bindings for each account
-- recommended `dmScope`: `per-account-channel-peer`
+- `agents.list` contains two entries
+- omit `workspace` if you want the script to auto-generate `bot1`, `bot2`
+- `bindings` contains the final desired routing list
+- recommended `session.dmScope`: `per-account-channel-peer`
 
 ## Example 3: Modify existing channel
 
 User intent:
 
-`保留当前配置，再给现有企业微信渠道新增一个账号。`
+`保留当前配置，只更新现有企业微信渠道的凭证。`
 
 Expected shape:
 
-- operation: `modify-existing-channel`
-- reuse the current channel node
-- preserve unrelated channel fields
-- only add or update managed accounts
+- read the current `channels.wecom-app`
+- confirm the real field names before patching
+- only include the fields that should change in `patch.channels.wecom-app`
 
 ## Example 4: New channel
 
@@ -50,7 +46,6 @@ User intent:
 
 Expected shape:
 
-- operation: `add-channel`
-- new channel node under `channels.qqbot`
-- one or more accounts
-- no new binding if the default agent is shared
+- new raw channel node under `patch.channels.qqbot`
+- no new `agents.list` entry if the current shared agent is enough
+- no new `bindings` if routing does not change

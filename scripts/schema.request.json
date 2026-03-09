@@ -1,153 +1,70 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://openclaw.dev/skills/openclaw-multi-bot-config/schema.request.json",
-  "title": "OpenClaw Bot Config Request",
+  "title": "OpenClaw Minimal Config Request",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "action", "configPath", "operation", "targets"],
+  "required": ["configPath", "patch"],
   "properties": {
-    "version": {
-      "type": "string",
-      "const": "1"
-    },
-    "action": {
-      "type": "string",
-      "enum": ["preview", "apply"]
-    },
     "configPath": {
       "type": "string",
       "minLength": 1
     },
-    "operation": {
-      "type": "string",
-      "enum": ["modify-existing-channel", "add-channel"]
-    },
-    "targets": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["channel", "mode", "accounts"],
-        "properties": {
-          "channel": {
-            "type": "string",
-            "minLength": 1
-          },
-          "mode": {
-            "type": "string",
-            "enum": ["shared-agent", "isolated-agents", "hybrid"]
-          },
-          "defaultAccount": {
-            "type": "string",
-            "minLength": 1
-          },
-          "credentialFields": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["requiredFields"],
-            "properties": {
-              "requiredFields": {
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "optionalFields": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              }
-            }
-          },
-          "accounts": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["accountId", "credentials"],
-              "properties": {
-                "accountId": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "credentials": {
-                  "type": "object",
-                  "minProperties": 1
-                },
-                "agentRef": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "enabled": {
-                  "type": "boolean"
+    "patch": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "agents": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "list": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id"],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "default": {
+                    "type": "boolean"
+                  },
+                  "workspace": {
+                    "type": "string",
+                    "minLength": 1
+                  }
                 }
               }
             }
           }
-        }
-      }
-    },
-    "agents": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["id"],
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "default": {
-            "type": "boolean"
-          },
-          "workspaceMode": {
-            "type": "string",
-            "enum": ["auto", "custom", "existing"]
-          },
-          "workspace": {
-            "type": "string",
-            "minLength": 1
+        },
+        "channels": {
+          "type": "object",
+          "description": "Raw channel nodes to merge into openclaw.json. Use the real OpenClaw field names here.",
+          "additionalProperties": {
+            "type": "object"
           }
-        }
-      }
-    },
-    "sessionPolicy": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mode"],
-      "properties": {
-        "mode": {
-          "type": "string",
-          "enum": ["preserve", "recommended", "explicit"]
         },
-        "dmScope": {
-          "type": "string",
-          "minLength": 1
-        }
-      }
-    },
-    "options": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "createBackup": {
-          "type": "boolean"
+        "bindings": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
-        "preserveUnknownFields": {
-          "type": "boolean"
-        },
-        "allowBindingOverride": {
-          "type": "boolean"
-        },
-        "allowAgentWorkspaceReuse": {
-          "type": "boolean"
+        "session": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "dmScope": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
         }
       }
     }

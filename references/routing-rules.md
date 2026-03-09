@@ -4,12 +4,11 @@
 
 The skill manages this mapping:
 
-`channel account -> agent -> workspace`
+`channel -> binding -> agent -> workspace`
 
-The common OpenClaw config blocks are:
+The managed OpenClaw config blocks are:
 
-- `channels.<channel>.accounts`
-- `channels.<channel>.defaultAccount`
+- `channels.<channel>`
 - `agents.list`
 - `bindings`
 - `session.dmScope`
@@ -18,41 +17,35 @@ The common OpenClaw config blocks are:
 
 | Mode | Behavior | Required config blocks |
 | --- | --- | --- |
-| `shared-agent` | Multiple accounts share one agent | `accounts`, `defaultAccount`, usually `dmScope` |
-| `isolated-agents` | One account maps to one agent | `accounts`, `agents.list`, `bindings`, `dmScope` |
-| `hybrid` | Some accounts share, some isolate | `accounts`, selective `agents.list`, selective `bindings`, `dmScope` |
+| `shared-agent` | Multiple bots share one agent | `channels`, usually `session.dmScope` |
+| `isolated-agents` | Different traffic goes to different agents | `channels`, `agents.list`, `bindings`, `session.dmScope` |
+| `hybrid` | Some traffic shares and some isolates | `channels`, selective `agents.list`, selective `bindings`, `session.dmScope` |
 
 Default recommendation:
 
-- for one channel with multiple accounts, prefer `isolated-agents`
-- only prefer `shared-agent` when the user explicitly wants all accounts to share one persona or workspace
+- prefer `isolated-agents` when the user has multiple bots and has not chosen a model yet
+- only prefer `shared-agent` when the user explicitly wants all bots to share one persona or workspace
 
 ## `dmScope`
 
 | Situation | Recommended value |
 | --- | --- |
-| Single channel, single account | Preserve current value |
-| Single channel, multiple accounts | `per-account-channel-peer` |
-| Multiple channels or multiple isolated agents | `per-account-channel-peer` |
+| One bot, no DM isolation request | Preserve current value |
+| Multiple bots and DMs should not mix | `per-account-channel-peer` |
+| Multiple isolated agents | `per-account-channel-peer` |
 
 Default recommendation:
 
-- if one channel contains multiple accounts, recommend `per-account-channel-peer`
-
-## `defaultAccount`
-
-- Preserve the existing value when possible.
-- If the channel has no default account yet, use the first managed account.
-- When the user specifies a default account, it must exist after merge.
+- if the user is trying to keep bot DM history separate, recommend `per-account-channel-peer`
 
 ## `bindings`
 
-- Only create account-level bindings when accounts must route to different agents.
-- Use `match.channel + match.accountId` as the stable routing key.
-- Shared-agent mode should not create account-level bindings by default.
+- Only create `bindings` when traffic must route to different agents.
+- Use the real OpenClaw binding shape already present in the local config when possible.
+- Shared-agent mode should not create extra `bindings` by default.
 
 ## `workspace`
 
 - Reuse an existing agent workspace unless the user asks for a custom path.
-- For auto-generated workspaces, prefer `<config-dir>/workspace-<agentId>`.
-- Treat reusing one workspace across different agent ids as a conflict unless explicitly allowed.
+- For auto-generated workspaces, prefer sibling folders named `bot1`, `bot2`, `bot3`, ... under the same parent directory as `agents.defaults.workspace` when available.
+- Tell the user these auto names can be changed later.

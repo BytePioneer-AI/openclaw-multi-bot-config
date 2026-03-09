@@ -7,8 +7,8 @@ This skill does not rely on a prebuilt channel registry.
 Field names come from one of these sources:
 
 - the user's explicit confirmation
-- `targets[*].credentialFields` in the structured request
-- an existing channel account object already present in `openclaw.json`
+- an existing channel object already present in `openclaw.json`
+- the exact patch node the skill is about to write under `patch.channels.<channel>`
 
 ## Field confirmation rule
 
@@ -32,26 +32,21 @@ Example:
 
 For existing configured channels:
 
-- compare the user's labels with the existing account object keys in `openclaw.json`
+- compare the user's labels with the existing channel object keys in `openclaw.json`
 - if there is a clear match, propose the mapping and ask for confirmation before apply
 
 For new channels:
 
 - require the user to name the exact fields explicitly
-- store those names in `request.json` as `targets[*].credentialFields`
+- write those exact field names directly into `patch.channels.<channel>`
 - do not infer a brand new field set from loose labels alone
 
-## Compatibility mode
+## Merge rule
 
-If a channel already exists in `openclaw.json`, the planner can infer account fields from the existing account objects.
+The patch format mirrors the real OpenClaw config.
 
-Compatibility mode is intended for:
+That means:
 
-- extending an already-configured channel
-- preserving unknown fields during merge
-
-Compatibility mode is not intended for:
-
-- creating a brand new channel with unknown credential fields
-
-For a brand new channel, the user must provide the field set explicitly before the planner can proceed.
+- `request.json` may contain an internal `patch`
+- the final `openclaw.json` does not contain `targets`, `operation`, or similar skill-only fields
+- channel values should already look like real OpenClaw channel nodes before they are passed to the script

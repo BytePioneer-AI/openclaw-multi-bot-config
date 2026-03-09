@@ -1,15 +1,34 @@
 #!/usr/bin/env node
-import { access } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+import {
+  applyPlan,
+  maskSecrets,
+  okResult,
+  optionalOption,
+  parseArgs,
+  readJsonFile,
+  requireOption,
+  runCli
+} from "./config_core.mjs";
 
-const entry = new URL("../dist/src/cli/apply-config.js", import.meta.url);
+export async function main() {
+  await runCli(async () => {
+    const args = parseArgs(process.argv.slice(2));
+    const planPath = requireOption(args, "plan");
+    const configPath = optionalOption(args, "config");
+    const backupPath = optionalOption(args, "backup");
+    const plan = await readJsonFile(planPath, "INVALID_REQUEST");
+    const result = await applyPlan(plan, configPath, backupPath);
 
-try {
-  await access(fileURLToPath(entry));
-  const module = await import(entry);
-  await module.main();
-} catch (error) {
-  console.error(`openclaw-multi-bot-config: unable to run apply_config (${error instanceof Error ? error.message : String(error)})`);
-  console.error("Build the skill first with `pnpm --dir openclaw-multi-bot-config build`.");
-  process.exit(10);
+    return okResult("Plan applied", {
+      backupPath: result.backupPath,
+      summary: maskSecrets(plan.summary),
+      verificationCommands: [
+        "openclaw gateway restart",
+        "openclaw agents list --bindings",
+        "openclaw channels status --probe"
+      ]
+    });
+  });
 }
+
+await main();
