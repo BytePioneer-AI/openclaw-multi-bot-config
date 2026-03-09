@@ -7,5 +7,9 @@
     "build": "tsc -p tsconfig.json",
     "clean": "node -e \"import('node:fs').then(({ rmSync }) => rmSync('dist', { recursive: true, force: true }))\"",
     "test": "pnpm run build && node --test dist/test/skill.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.5",
+    "typescript": "^5.9.3"
   }
 }

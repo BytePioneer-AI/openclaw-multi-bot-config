@@ -1,49 +1,69 @@
 ---
 name: openclaw-bot-config
-description: Configure or modify OpenClaw multi-account, multi-bot, and multi-agent routing without manually editing openclaw.json.
+description: Explain and configure OpenClaw multi-account, multi-bot, and multi-agent routing. Use this skill when the user asks how to configure multiple accounts or bots, what fields or tradeoffs matter, how `dmScope` differs from `bindings`, which routing mode to choose, or wants to add, modify, preview, apply, or roll back OpenClaw multi-account configuration without hand-editing `openclaw.json`.
 ---
 
 # OpenClaw Bot Config
 
-Use this skill when the user wants to:
+Classify the request before acting:
 
-- configure multiple bots or accounts for OpenClaw
-- add or update a channel account in `openclaw.json`
-- route different accounts to one or more agents
-- change `defaultAccount`, `bindings`, or `session.dmScope`
-- avoid hand-editing the OpenClaw config file
+- Use consult mode when the user is asking for requirements, differences, tradeoffs, examples, or how multi-account OpenClaw config works.
+- Use execution mode when the user wants to inspect current config, generate a preview, or actually change `openclaw.json`.
 
-## Workflow
+## Consult Mode
 
-1. Read the target `openclaw.json` first.
-2. Identify existing `channels.*` entries and confirm whether the user wants to modify an existing channel or add a new one.
-3. Collect a structured request that matches `scripts/schema.request.json`.
-4. If routing or channel rules are unclear, read:
-   - `references/routing-rules.md`
+1. Read `references/multi-account-guide.md` first.
+2. Read other references only as needed:
    - `references/channel-fields.md`
    - `references/config-strategies.md`
+   - `references/routing-rules.md`
    - `references/examples.md`
-5. Generate a preview with:
+3. Answer in product terms first:
+   - what problem each config block solves
+   - present 2-3 topology options when the user has not chosen one yet
+   - default to recommending `isolated-agents` for multi-account setups unless the user explicitly says multiple accounts should share one memory or workspace
+   - explain whether the user needs shared-agent, isolated-agents, or hybrid
+   - what information is still missing
+   - which user-provided labels still need to be mapped to canonical config field names
+4. When presenting options, prefer this order:
+   - `isolated-agents` as the default recommendation for multi-account, multi-bot setups
+   - `shared-agent` as the lighter-weight option when the user explicitly wants one shared persona
+   - `hybrid` only when the user clearly mixes both needs
+5. Recommend `session.dmScope = per-account-channel-peer` whenever one channel contains multiple accounts, unless the user has a strong reason to preserve a different value.
+6. Do not run planning or apply scripts if the user is still deciding or only asking how it works.
+7. If the user asks about their existing config, read `openclaw.json` and explain the current topology before suggesting changes.
+
+## Execution Mode
+
+1. Read the target `openclaw.json` first.
+2. Identify existing `channels.*` entries and determine whether the user wants to modify an existing channel or add a new one.
+3. Collect a structured request that matches `scripts/schema.request.json`.
+4. Confirm credential field names before building the request:
+   - if the user gives labels like `Bot ID`, `Secret`, `AppKey`, or `Webhook`, map them to the channel's canonical config fields
+   - for registered channels, restate the canonical field names and ask the user to confirm the mapping when there is ambiguity
+   - if the channel is not registered or the mapping is unclear, do not guess; ask the user which exact config field each provided value should populate
+5. If routing or channel rules are unclear, read the relevant files under `references/`.
+6. Generate a preview with:
 
 ```bash
 node ./scripts/plan_config.mjs --request <request.json> --config <openclaw.json> --out <plan.json>
 node ./scripts/validate_plan.mjs --plan <plan.json> --config <openclaw.json>
 ```
 
-6. Summarize the preview for the user. Always show:
+7. Summarize the preview for the user. Always show:
    - channels to add or modify
    - accounts to add or update
    - agents to add or update
    - bindings to add or replace
    - final `dmScope`
    - warnings or conflicts
-7. Only write config after explicit confirmation:
+8. Only write config after explicit confirmation:
 
 ```bash
 node ./scripts/apply_config.mjs --plan <plan.json> --config <openclaw.json>
 ```
 
-8. If the user asks to restore the previous config, use:
+9. If the user asks to restore the previous config, use:
 
 ```bash
 node ./scripts/rollback_config.mjs --config <openclaw.json> --backup <backup.json.bak>
@@ -51,6 +71,8 @@ node ./scripts/rollback_config.mjs --config <openclaw.json> --backup <backup.jso
 
 ## Guardrails
 
+- Treat explanation and execution as separate modes. Do not jump to file changes when the user is still asking design or requirements questions.
+- When the user provides credential labels that do not exactly match the channel registry, confirm the field mapping before generating `request.json`.
 - Never hand-edit `openclaw.json` when these scripts can do the work.
 - Never let the model write the final config directly.
 - Treat `scripts/schema.request.json` as the contract for user intent.

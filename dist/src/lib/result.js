@@ -43,4 +43,3 @@ export function errorResult(code, message, issues = []) {
 export function issue(code, message, severity, path) {
     return { code, message, severity, ...(path ? { path } : {}) };
 }
-//# sourceMappingURL=result.js.map

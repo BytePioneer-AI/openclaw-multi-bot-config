@@ -1,0 +1,36 @@
+{
+  "version": "1",
+  "action": "preview",
+  "configPath": "C:\\Users\\Administrator\\.openclaw\\openclaw.json",
+  "operation": "add-channel",
+  "targets": [
+    {
+      "channel": "custom-wecom-adapter",
+      "mode": "shared-agent",
+      "defaultAccount": "main",
+      "credentialFields": {
+        "requiredFields": ["botId", "secret", "callbackToken"],
+        "optionalFields": ["encodingAESKey"]
+      },
+      "accounts": [
+        {
+          "accountId": "main",
+          "credentials": {
+            "botId": "bot-main",
+            "secret": "secret-main",
+            "callbackToken": "token-main"
+          }
+        }
+      ]
+    }
+  ],
+  "sessionPolicy": {
+    "mode": "preserve"
+  },
+  "options": {
+    "createBackup": true,
+    "preserveUnknownFields": true,
+    "allowBindingOverride": false,
+    "allowAgentWorkspaceReuse": true
+  }
+}

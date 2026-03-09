@@ -105,13 +105,13 @@ export async function generatePlan(request: BotConfigRequest, currentConfig: Ope
 
   for (const target of request.targets) {
     const currentChannel = currentConfig.channels?.[target.channel];
-    const channelDefinition = resolveChannelDefinition(target.channel, registry, currentConfig);
+    const channelDefinition = resolveChannelDefinition(target.channel, registry, currentConfig, target.credentialFields);
 
     if (!channelDefinition) {
       errors.push(
         issue(
           "CHANNEL_UNSUPPORTED",
-          `Unsupported new channel '${target.channel}'. Add it to channel_registry.json or extend an existing configured channel.`,
+          `Unsupported new channel '${target.channel}'. Add it to channel_registry.json, provide credentialFields, or extend an existing configured channel.`,
           "error",
           `targets.${target.channel}`
         )
@@ -194,7 +194,9 @@ export async function generatePlan(request: BotConfigRequest, currentConfig: Ope
       defaultAccount,
       accounts: resolvedAccounts,
       requiredFields: channelDefinition.requiredFields,
-      compatibilityMode: channelDefinition.compatibilityMode
+      optionalFields: channelDefinition.optionalFields,
+      compatibilityMode: channelDefinition.compatibilityMode,
+      definitionSource: channelDefinition.source
     });
   }
 

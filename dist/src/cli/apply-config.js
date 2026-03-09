@@ -18,4 +18,3 @@ export async function main() {
         return okResult("Plan applied", maskSecrets(result.data), result.issues);
     });
 }
-//# sourceMappingURL=apply-config.js.map

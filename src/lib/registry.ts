@@ -1,11 +1,12 @@
 import path from "node:path";
-import type { ChannelConfig, ChannelRegistry, ChannelRegistryEntry, OpenClawConfig } from "./types.js";
+import type { ChannelConfig, ChannelRegistry, ChannelRegistryEntry, OpenClawConfig, RequestCredentialFields } from "./types.js";
 import { getScriptsDir } from "./paths.js";
 import { readJsonFile } from "./files.js";
 
 export interface ResolvedChannelDefinition extends ChannelRegistryEntry {
   channel: string;
   compatibilityMode: boolean;
+  source: "registry" | "request" | "compatibility";
 }
 
 export async function loadChannelRegistry(): Promise<ChannelRegistry> {
@@ -26,21 +27,40 @@ export function inferCompatibilityDefinition(channel: string, channelConfig: Cha
     optionalFields: [],
     supportsAccounts: true,
     defaults: {},
-    compatibilityMode: true
+    compatibilityMode: true,
+    source: "compatibility"
+  };
+}
+
+export function createRequestDefinition(channel: string, fieldSet: RequestCredentialFields): ResolvedChannelDefinition {
+  return {
+    channel,
+    requiredFields: [...fieldSet.requiredFields],
+    optionalFields: [...(fieldSet.optionalFields ?? [])],
+    supportsAccounts: true,
+    defaults: {},
+    compatibilityMode: false,
+    source: "request"
   };
 }
 
 export function resolveChannelDefinition(
   channel: string,
   registry: ChannelRegistry,
-  currentConfig: OpenClawConfig
+  currentConfig: OpenClawConfig,
+  fieldSet?: RequestCredentialFields
 ): ResolvedChannelDefinition | undefined {
+  if (fieldSet) {
+    return createRequestDefinition(channel, fieldSet);
+  }
+
   const registered = registry[channel];
   if (registered) {
     return {
       channel,
       ...registered,
-      compatibilityMode: false
+      compatibilityMode: false,
+      source: "registry"
     };
   }
 

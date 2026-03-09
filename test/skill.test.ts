@@ -3,9 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import { fileURLToPath } from "node:url";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadRequest } from "../src/lib/request.js";
 import { generatePlan } from "../src/lib/planner.js";
 import { readJsonFile, writeJsonFileAtomic } from "../src/lib/files.js";
@@ -13,8 +11,6 @@ import { validatePlan } from "../src/lib/validator.js";
 import { mergeConfig } from "../src/lib/merge.js";
 import { applyPlan, rollbackConfig } from "../src/lib/apply.js";
 import type { BotConfigPlan, OpenClawConfig } from "../src/lib/types.js";
-
-const execFileAsync = promisify(execFile);
 const testRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../test/fixtures");
 const skillRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -114,6 +110,24 @@ test("new unregistered channels are rejected during planning", async () => {
   assert.equal(plan.errors.some((entry) => entry.code === "CHANNEL_UNSUPPORTED"), true);
 });
 
+test("new unregistered channels can be planned when credential fields are provided explicitly", async () => {
+  const requestFixture = await loadFixtureJson<Record<string, unknown>>("requests", "request-explicit-new-channel.json");
+  const config = await loadFixtureJson<OpenClawConfig>("configs", "empty-openclaw.json");
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-explicit-"));
+  const configPath = path.join(tempDir, "openclaw.json");
+  await writeJsonFileAtomic(configPath, config);
+  const requestPath = path.join(tempDir, "request.json");
+  await writeJsonFileAtomic(requestPath, { ...requestFixture, configPath });
+
+  const { request, issues } = await loadRequest(requestPath);
+  assert.equal(issues.length, 0);
+  const plan = await generatePlan(request, config);
+  assert.equal(plan.errors.length, 0);
+  assert.equal(plan.resolved.targets[0]?.definitionSource, "request");
+  assert.deepEqual(plan.resolved.targets[0]?.requiredFields, ["botId", "secret", "callbackToken"]);
+  assert.equal(plan.patch.channels?.["custom-wecom-adapter"]?.accounts?.main?.botId, "bot-main");
+});
+
 test("apply creates a backup and rollback restores the original file", async () => {
   const requestFixture = await loadFixtureJson<Record<string, unknown>>("requests", "request-isolated.json");
   const config = await loadFixtureJson<OpenClawConfig>("configs", "empty-openclaw.json");
@@ -147,7 +161,15 @@ test("copied skill directory can still execute plan_config wrapper", async () =>
   const copiedSkillRoot = path.join(tempDir, "skills", "openclaw-bot-config");
   await fs.cp(skillRoot, copiedSkillRoot, {
     recursive: true,
-    filter: (source) => !source.includes(`${path.sep}test${path.sep}`)
+    filter: (source) => {
+      const relative = path.relative(skillRoot, source);
+      if (relative === "") {
+        return true;
+      }
+
+      const segments = relative.split(path.sep);
+      return !segments.includes("test") && !segments.includes("node_modules") && !segments.includes(".git");
+    }
   });
 
   const configPath = path.join(tempDir, "openclaw.json");
@@ -157,11 +179,24 @@ test("copied skill directory can still execute plan_config wrapper", async () =>
   await writeJsonFileAtomic(requestPath, { ...requestFixture, configPath });
 
   const wrapperPath = path.join(copiedSkillRoot, "scripts", "plan_config.mjs");
-  const { stdout } = await execFileAsync(process.execPath, [wrapperPath, "--request", requestPath, "--config", configPath, "--out", planPath], {
-    cwd: copiedSkillRoot
-  });
+  const wrapperRealPath = await fs.realpath(wrapperPath);
+  const stdoutChunks: string[] = [];
+  const originalArgv = process.argv;
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.argv = [process.execPath, wrapperRealPath, "--request", requestPath, "--config", configPath, "--out", planPath];
+  process.stdout.write = ((chunk: string | Uint8Array) => {
+    stdoutChunks.push(typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8"));
+    return true;
+  }) as typeof process.stdout.write;
 
-  const output = JSON.parse(stdout) as { ok: boolean; data?: { planPath?: string } };
+  try {
+    await import(pathToFileURL(wrapperRealPath).href);
+  } finally {
+    process.argv = originalArgv;
+    process.stdout.write = originalWrite;
+  }
+
+  const output = JSON.parse(stdoutChunks.join("")) as { ok: boolean; data?: { planPath?: string } };
   assert.equal(output.ok, true);
   assert.equal(output.data?.planPath, planPath);
   const copiedPlan = await readJsonFile<BotConfigPlan>(planPath);

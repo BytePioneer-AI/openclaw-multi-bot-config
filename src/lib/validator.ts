@@ -1,6 +1,5 @@
 import type { BotConfigPlan, ChannelConfig, Issue, OpenClawConfig } from "./types.js";
 import { issue } from "./result.js";
-import { loadChannelRegistry, resolveChannelDefinition } from "./registry.js";
 import { mergeConfig } from "./merge.js";
 
 function validatePlanShape(plan: BotConfigPlan) {
@@ -40,19 +39,10 @@ function validateDefaultAccount(targetChannel: ChannelConfig, channelName: strin
 }
 
 export async function validatePlan(plan: BotConfigPlan, currentConfig: OpenClawConfig) {
-  const registry = await loadChannelRegistry();
   const issues = [...validatePlanShape(plan), ...plan.errors];
   const warnings = [...plan.warnings];
 
   for (const resolvedTarget of plan.resolved.targets) {
-    const definition = resolveChannelDefinition(resolvedTarget.channel, registry, currentConfig);
-    if (!definition) {
-      issues.push(
-        issue("CHANNEL_UNSUPPORTED", `Unsupported channel '${resolvedTarget.channel}'`, "error", `targets.${resolvedTarget.channel}`)
-      );
-      continue;
-    }
-
     const accountIds = new Set<string>();
     for (const account of resolvedTarget.accounts) {
       if (accountIds.has(account.accountId)) {
@@ -79,14 +69,9 @@ export async function validatePlan(plan: BotConfigPlan, currentConfig: OpenClawC
     }
 
     issues.push(...validateDefaultAccount(finalChannel, resolvedTarget.channel));
-    const definition = resolveChannelDefinition(resolvedTarget.channel, registry, previewConfig);
-    if (!definition) {
-      continue;
-    }
-
     for (const account of resolvedTarget.accounts) {
       const mergedAccount = finalChannel.accounts?.[account.accountId];
-      for (const field of definition.requiredFields) {
+      for (const field of resolvedTarget.requiredFields) {
         if (mergedAccount?.[field] === undefined || mergedAccount[field] === null || mergedAccount[field] === "") {
           issues.push(
             issue(

@@ -42,6 +42,28 @@
             "type": "string",
             "minLength": 1
           },
+          "credentialFields": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["requiredFields"],
+            "properties": {
+              "requiredFields": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "optionalFields": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
           "accounts": {
             "type": "array",
             "minItems": 1,

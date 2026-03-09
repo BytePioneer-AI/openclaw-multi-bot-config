@@ -42,11 +42,17 @@ export interface RequestAccount {
   enabled?: boolean;
 }
 
+export interface RequestCredentialFields {
+  requiredFields: string[];
+  optionalFields?: string[];
+}
+
 export interface RequestTarget {
   channel: string;
   mode: TargetMode;
   defaultAccount?: string;
   accounts: RequestAccount[];
+  credentialFields?: RequestCredentialFields;
 }
 
 export interface RequestAgent {
@@ -144,7 +150,9 @@ export interface ResolvedTarget {
   defaultAccount?: string;
   accounts: ResolvedAccount[];
   requiredFields: string[];
+  optionalFields: string[];
   compatibilityMode: boolean;
+  definitionSource: "registry" | "request" | "compatibility";
 }
 
 export interface ResolvedAgent extends AgentConfig {

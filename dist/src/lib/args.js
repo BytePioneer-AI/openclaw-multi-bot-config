@@ -30,4 +30,3 @@ export function optionalString(args, key) {
     const value = args.options.get(key);
     return typeof value === "string" ? value : undefined;
 }
-//# sourceMappingURL=args.js.map

@@ -2,6 +2,7 @@ import type {
   BotConfigRequest,
   Issue,
   RequestAgent,
+  RequestCredentialFields,
   RequestOptions,
   RequestTarget,
   SessionPolicy
@@ -22,6 +23,49 @@ const DEFAULT_SESSION_POLICY: SessionPolicy = {
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function validateCredentialFields(fieldSet: RequestCredentialFields, path: string) {
+  const issues: Issue[] = [];
+  const requiredFields = fieldSet.requiredFields ?? [];
+  const optionalFields = fieldSet.optionalFields ?? [];
+  const seen = new Set<string>();
+
+  if (!Array.isArray(requiredFields) || requiredFields.length === 0) {
+    issues.push(issue("INVALID_REQUEST", "credentialFields.requiredFields must be a non-empty array", "error", `${path}.requiredFields`));
+    return issues;
+  }
+
+  for (const [index, field] of requiredFields.entries()) {
+    if (typeof field !== "string" || field.length === 0) {
+      issues.push(issue("INVALID_REQUEST", "Required credential field names must be non-empty strings", "error", `${path}.requiredFields[${index}]`));
+      continue;
+    }
+    if (seen.has(field)) {
+      issues.push(issue("INVALID_REQUEST", `Duplicate credential field name: ${field}`, "error", `${path}.requiredFields[${index}]`));
+      continue;
+    }
+    seen.add(field);
+  }
+
+  if (!Array.isArray(optionalFields)) {
+    issues.push(issue("INVALID_REQUEST", "credentialFields.optionalFields must be an array when provided", "error", `${path}.optionalFields`));
+    return issues;
+  }
+
+  for (const [index, field] of optionalFields.entries()) {
+    if (typeof field !== "string" || field.length === 0) {
+      issues.push(issue("INVALID_REQUEST", "Optional credential field names must be non-empty strings", "error", `${path}.optionalFields[${index}]`));
+      continue;
+    }
+    if (seen.has(field)) {
+      issues.push(issue("INVALID_REQUEST", `Duplicate credential field name: ${field}`, "error", `${path}.optionalFields[${index}]`));
+      continue;
+    }
+    seen.add(field);
+  }
+
+  return issues;
 }
 
 function validateRequestShape(request: Record<string, unknown>) {
@@ -61,6 +105,10 @@ function validateTargets(targets: RequestTarget[]) {
       issues.push(issue("INVALID_REQUEST", `Duplicate target channel: ${target.channel}`, "error", `targets[${targetIndex}].channel`));
     }
     channelSet.add(target.channel);
+
+    if (target.credentialFields) {
+      issues.push(...validateCredentialFields(target.credentialFields, `targets[${targetIndex}].credentialFields`));
+    }
 
     const accountSet = new Set<string>();
     target.accounts.forEach((account, accountIndex) => {

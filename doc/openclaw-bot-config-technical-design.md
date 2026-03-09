@@ -178,6 +178,7 @@ openclaw-multi-bot-config/
 | `channel` | string | 是 | 渠道 id，例如 `dingtalk` |
 | `mode` | string | 是 | `shared-agent`、`isolated-agents`、`hybrid` |
 | `defaultAccount` | string | 否 | 渠道默认账号 |
+| `credentialFields` | object | 否 | 新渠道或自定义适配器显式提供的字段集合 |
 | `accounts` | array | 是 | 账号配置列表 |
 
 `targets[*].accounts[*]` 结构：
@@ -188,6 +189,13 @@ openclaw-multi-bot-config/
 | `credentials` | object | 是 | 渠道凭证字典 |
 | `agentRef` | string | 否 | 指向 `agents[*].id` |
 | `enabled` | boolean | 否 | 账号级启用标记，缺省视为 `true` |
+
+`targets[*].credentialFields` 结构：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `requiredFields` | array | 是 | 用户确认过的必填字段名 |
+| `optionalFields` | array | 否 | 用户确认过的可选字段名 |
 
 `agents[*]` 结构：
 
@@ -586,7 +594,8 @@ MVP 只管理账号级 bindings：
 
 - 已注册渠道：严格校验 `requiredFields`
 - 未注册但当前配置中已存在的渠道：允许从现有账号对象推断字段集合，校验级别为“兼容模式”
-- 未注册且为新增渠道：要求用户明确提供字段集合，否则返回 `CHANNEL_UNSUPPORTED`
+- 未注册且为新增渠道：允许用户在请求中通过 `credentialFields` 显式提供字段集合
+- 未注册且为新增渠道但未提供 `credentialFields`：返回 `CHANNEL_UNSUPPORTED`
 
 这样可以同时满足：
 

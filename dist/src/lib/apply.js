@@ -62,4 +62,3 @@ export async function rollbackConfig(configPath, backupPath) {
         issues: [issue("OK", "Restored configuration from backup", "warning", backupPath)]
     };
 }
-//# sourceMappingURL=apply.js.map

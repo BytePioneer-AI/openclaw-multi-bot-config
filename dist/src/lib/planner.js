@@ -64,9 +64,9 @@ export async function generatePlan(request, currentConfig) {
     const managedAgents = new Map();
     for (const target of request.targets) {
         const currentChannel = currentConfig.channels?.[target.channel];
-        const channelDefinition = resolveChannelDefinition(target.channel, registry, currentConfig);
+        const channelDefinition = resolveChannelDefinition(target.channel, registry, currentConfig, target.credentialFields);
         if (!channelDefinition) {
-            errors.push(issue("CHANNEL_UNSUPPORTED", `Unsupported new channel '${target.channel}'. Add it to channel_registry.json or extend an existing configured channel.`, "error", `targets.${target.channel}`));
+            errors.push(issue("CHANNEL_UNSUPPORTED", `Unsupported new channel '${target.channel}'. Add it to channel_registry.json, provide credentialFields, or extend an existing configured channel.`, "error", `targets.${target.channel}`));
             continue;
         }
         if (request.operation === "modify-existing-channel" && !currentChannel) {
@@ -120,7 +120,9 @@ export async function generatePlan(request, currentConfig) {
             defaultAccount,
             accounts: resolvedAccounts,
             requiredFields: channelDefinition.requiredFields,
-            compatibilityMode: channelDefinition.compatibilityMode
+            optionalFields: channelDefinition.optionalFields,
+            compatibilityMode: channelDefinition.compatibilityMode,
+            definitionSource: channelDefinition.source
         });
     }
     const resolvedAgents = [...managedAgents.values()].sort((left, right) => left.id.localeCompare(right.id));
@@ -213,4 +215,3 @@ export async function generatePlan(request, currentConfig) {
         errors
     };
 }
-//# sourceMappingURL=planner.js.map

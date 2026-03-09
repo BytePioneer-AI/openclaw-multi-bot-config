@@ -84,4 +84,3 @@ export function mergeConfig(currentConfig, plan) {
     }
     return merged;
 }
-//# sourceMappingURL=merge.js.map

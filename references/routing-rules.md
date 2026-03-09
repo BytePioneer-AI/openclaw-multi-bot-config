@@ -22,6 +22,11 @@ The common OpenClaw config blocks are:
 | `isolated-agents` | One account maps to one agent | `accounts`, `agents.list`, `bindings`, `dmScope` |
 | `hybrid` | Some accounts share, some isolate | `accounts`, selective `agents.list`, selective `bindings`, `dmScope` |
 
+Default recommendation:
+
+- for one channel with multiple accounts, prefer `isolated-agents`
+- only prefer `shared-agent` when the user explicitly wants all accounts to share one persona or workspace
+
 ## `dmScope`
 
 | Situation | Recommended value |
@@ -29,6 +34,10 @@ The common OpenClaw config blocks are:
 | Single channel, single account | Preserve current value |
 | Single channel, multiple accounts | `per-account-channel-peer` |
 | Multiple channels or multiple isolated agents | `per-account-channel-peer` |
+
+Default recommendation:
+
+- if one channel contains multiple accounts, recommend `per-account-channel-peer`
 
 ## `defaultAccount`
 

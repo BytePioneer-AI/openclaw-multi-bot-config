@@ -19,4 +19,3 @@ export async function runCli(handler) {
         process.exit(EXIT_CODES.INTERNAL_ERROR);
     }
 }
-//# sourceMappingURL=output.js.map

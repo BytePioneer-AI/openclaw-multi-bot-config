@@ -11,4 +11,3 @@ export async function main() {
         return okResult("Backup created", { backupPath });
     });
 }
-//# sourceMappingURL=backup-config.js.map

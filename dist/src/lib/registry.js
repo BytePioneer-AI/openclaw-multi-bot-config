@@ -17,18 +17,33 @@ export function inferCompatibilityDefinition(channel, channelConfig) {
         optionalFields: [],
         supportsAccounts: true,
         defaults: {},
-        compatibilityMode: true
+        compatibilityMode: true,
+        source: "compatibility"
     };
 }
-export function resolveChannelDefinition(channel, registry, currentConfig) {
+export function createRequestDefinition(channel, fieldSet) {
+    return {
+        channel,
+        requiredFields: [...fieldSet.requiredFields],
+        optionalFields: [...(fieldSet.optionalFields ?? [])],
+        supportsAccounts: true,
+        defaults: {},
+        compatibilityMode: false,
+        source: "request"
+    };
+}
+export function resolveChannelDefinition(channel, registry, currentConfig, fieldSet) {
+    if (fieldSet) {
+        return createRequestDefinition(channel, fieldSet);
+    }
     const registered = registry[channel];
     if (registered) {
         return {
             channel,
             ...registered,
-            compatibilityMode: false
+            compatibilityMode: false,
+            source: "registry"
         };
     }
     return inferCompatibilityDefinition(channel, currentConfig.channels?.[channel]);
 }
-//# sourceMappingURL=registry.js.map

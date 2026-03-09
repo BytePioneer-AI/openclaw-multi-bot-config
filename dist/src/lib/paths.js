@@ -12,4 +12,3 @@ export function sanitizeIdentifier(value) {
 export function buildAutoWorkspace(configPath, agentId) {
     return path.join(path.dirname(configPath), `workspace-${sanitizeIdentifier(agentId)}`);
 }
-//# sourceMappingURL=paths.js.map

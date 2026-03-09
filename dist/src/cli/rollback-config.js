@@ -12,4 +12,3 @@ export async function main() {
         return okResult("Rollback completed", maskSecrets(result.data), result.issues);
     });
 }
-//# sourceMappingURL=rollback-config.js.map

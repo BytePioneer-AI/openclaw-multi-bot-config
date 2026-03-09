@@ -1,5 +1,4 @@
 import { issue } from "./result.js";
-import { loadChannelRegistry, resolveChannelDefinition } from "./registry.js";
 import { mergeConfig } from "./merge.js";
 function validatePlanShape(plan) {
     const issues = [];
@@ -25,15 +24,9 @@ function validateDefaultAccount(targetChannel, channelName) {
     return issues;
 }
 export async function validatePlan(plan, currentConfig) {
-    const registry = await loadChannelRegistry();
     const issues = [...validatePlanShape(plan), ...plan.errors];
     const warnings = [...plan.warnings];
     for (const resolvedTarget of plan.resolved.targets) {
-        const definition = resolveChannelDefinition(resolvedTarget.channel, registry, currentConfig);
-        if (!definition) {
-            issues.push(issue("CHANNEL_UNSUPPORTED", `Unsupported channel '${resolvedTarget.channel}'`, "error", `targets.${resolvedTarget.channel}`));
-            continue;
-        }
         const accountIds = new Set();
         for (const account of resolvedTarget.accounts) {
             if (accountIds.has(account.accountId)) {
@@ -50,13 +43,9 @@ export async function validatePlan(plan, currentConfig) {
             continue;
         }
         issues.push(...validateDefaultAccount(finalChannel, resolvedTarget.channel));
-        const definition = resolveChannelDefinition(resolvedTarget.channel, registry, previewConfig);
-        if (!definition) {
-            continue;
-        }
         for (const account of resolvedTarget.accounts) {
             const mergedAccount = finalChannel.accounts?.[account.accountId];
-            for (const field of definition.requiredFields) {
+            for (const field of resolvedTarget.requiredFields) {
                 if (mergedAccount?.[field] === undefined || mergedAccount[field] === null || mergedAccount[field] === "") {
                     issues.push(issue("CHANNEL_FIELDS_MISSING", `Missing required field '${field}' for ${resolvedTarget.channel}.${account.accountId}`, "error", `channels.${resolvedTarget.channel}.accounts.${account.accountId}.${field}`));
                 }
@@ -99,4 +88,3 @@ export async function validatePlan(plan, currentConfig) {
         previewConfig
     };
 }
-//# sourceMappingURL=validator.js.map
