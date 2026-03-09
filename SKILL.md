@@ -1,5 +1,5 @@
 ---
-name: openclaw-bot-config
+name: openclaw-multi-bot-config
 description: Explain and configure OpenClaw multi-account, multi-bot, and multi-agent routing. Use this skill when the user asks how to configure multiple accounts or bots, what fields or tradeoffs matter, how `dmScope` differs from `bindings`, which routing mode to choose, or wants to add, modify, preview, or apply OpenClaw multi-account configuration without hand-editing `openclaw.json`.
 ---
 

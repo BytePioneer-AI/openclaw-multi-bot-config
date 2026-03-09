@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://openclaw.dev/skills/openclaw-bot-config/schema.request.json",
+  "$id": "https://openclaw.dev/skills/openclaw-multi-bot-config/schema.request.json",
   "title": "OpenClaw Bot Config Request",
   "type": "object",
   "additionalProperties": false,

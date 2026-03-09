@@ -6,7 +6,7 @@ import { maskSecrets } from "./mask-secrets.js";
 import { mergeConfig } from "./merge.js";
 import { validatePlan } from "./validator.js";
 export async function createBackup(configPath, backupDir) {
-    const directory = backupDir ?? path.join(path.dirname(configPath), "backups", "openclaw-bot-config");
+    const directory = backupDir ?? path.join(path.dirname(configPath), "backups", "openclaw-multi-bot-config");
     await ensureDir(directory);
     const backupPath = path.join(directory, `openclaw-${timestampForFilename()}.json.bak`);
     await copyFile(configPath, backupPath);

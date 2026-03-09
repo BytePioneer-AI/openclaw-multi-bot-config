@@ -1,5 +1,5 @@
 ---
-name: openclaw-bot-config
+name: openclaw-multi-bot-config
 description: Configure or modify OpenClaw multi-account, multi-bot, and multi-agent routing without manually editing openclaw.json.
 ---
 

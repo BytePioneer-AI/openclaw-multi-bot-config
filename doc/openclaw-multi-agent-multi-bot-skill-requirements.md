@@ -13,7 +13,7 @@
 
 本仓库中的[多 Agent / 多机器人配置指南](./openclaw-multi-agent-multi-bot-config.md)可以作为知识来源，但不是运行时依赖。
 
-稳定可交付实现所需的脚本接口、schema、merge 规则和测试要求，见[技术设计文档](./openclaw-bot-config-technical-design.md)。
+稳定可交付实现所需的脚本接口、schema、merge 规则和测试要求，见[技术设计文档](./openclaw-multi-bot-config-technical-design.md)。
 
 ## 2. 设计定位
 

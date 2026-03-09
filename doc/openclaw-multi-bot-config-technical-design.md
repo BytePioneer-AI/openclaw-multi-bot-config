@@ -12,7 +12,7 @@
 - 未知渠道、已有配置、冲突和失败应如何处理
 - 如何验证实现已经达到可交付标准
 
-本文默认该 Skill 的发布名为 `openclaw-bot-config`。
+本文默认该 Skill 的发布名为 `openclaw-multi-bot-config`。
 
 ## 2. 设计结论
 

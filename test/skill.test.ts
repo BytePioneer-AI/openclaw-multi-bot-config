@@ -21,7 +21,7 @@ async function loadFixtureJson<T>(...parts: string[]): Promise<T> {
 test("shared-agent planning preserves existing channel fields and avoids bindings", async () => {
   const requestFixture = await loadFixtureJson<Record<string, unknown>>("requests", "request-shared.json");
   const config = await loadFixtureJson<OpenClawConfig>("configs", "existing-dingtalk.json");
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-shared-"));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-multi-bot-config-shared-"));
   const configPath = path.join(tempDir, "openclaw.json");
   await writeJsonFileAtomic(configPath, config);
   const requestPath = path.join(tempDir, "request.json");
@@ -40,7 +40,7 @@ test("shared-agent planning preserves existing channel fields and avoids binding
 test("isolated-agent planning generates agents and stable bindings", async () => {
   const requestFixture = await loadFixtureJson<Record<string, unknown>>("requests", "request-isolated.json");
   const config = await loadFixtureJson<OpenClawConfig>("configs", "empty-openclaw.json");
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-isolated-"));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-multi-bot-config-isolated-"));
   const configPath = path.join(tempDir, "openclaw.json");
   await writeJsonFileAtomic(configPath, config);
   const requestPath = path.join(tempDir, "request.json");
@@ -67,7 +67,7 @@ test("isolated-agent planning generates agents and stable bindings", async () =>
 test("existing unregistered channel is handled in compatibility mode", async () => {
   const requestFixture = await loadFixtureJson<Record<string, unknown>>("requests", "request-unregistered-existing.json");
   const config = await loadFixtureJson<OpenClawConfig>("configs", "existing-unregistered.json");
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-compat-"));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-multi-bot-config-compat-"));
   const configPath = path.join(tempDir, "openclaw.json");
   await writeJsonFileAtomic(configPath, config);
   const requestPath = path.join(tempDir, "request.json");
@@ -84,7 +84,7 @@ test("existing unregistered channel is handled in compatibility mode", async () 
 test("validation blocks binding conflicts", async () => {
   const requestFixture = await loadFixtureJson<Record<string, unknown>>("requests", "request-binding-conflict.json");
   const config = await loadFixtureJson<OpenClawConfig>("configs", "binding-conflict.json");
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-conflict-"));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-multi-bot-config-conflict-"));
   const configPath = path.join(tempDir, "openclaw.json");
   await writeJsonFileAtomic(configPath, config);
   const requestPath = path.join(tempDir, "request.json");
@@ -101,7 +101,7 @@ test("validation blocks binding conflicts", async () => {
 test("new unregistered channels are rejected during planning", async () => {
   const requestFixture = await loadFixtureJson<Record<string, unknown>>("requests", "request-invalid-new-channel.json");
   const config = await loadFixtureJson<OpenClawConfig>("configs", "empty-openclaw.json");
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-invalid-"));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-multi-bot-config-invalid-"));
   const configPath = path.join(tempDir, "openclaw.json");
   await writeJsonFileAtomic(configPath, config);
   const requestPath = path.join(tempDir, "request.json");
@@ -116,7 +116,7 @@ test("new unregistered channels are rejected during planning", async () => {
 test("new unregistered channels can be planned when credential fields are provided explicitly", async () => {
   const requestFixture = await loadFixtureJson<Record<string, unknown>>("requests", "request-explicit-new-channel.json");
   const config = await loadFixtureJson<OpenClawConfig>("configs", "empty-openclaw.json");
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-explicit-"));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-multi-bot-config-explicit-"));
   const configPath = path.join(tempDir, "openclaw.json");
   await writeJsonFileAtomic(configPath, config);
   const requestPath = path.join(tempDir, "request.json");
@@ -134,7 +134,7 @@ test("new unregistered channels can be planned when credential fields are provid
 test("apply creates a backup and rollback restores the original file", async () => {
   const requestFixture = await loadFixtureJson<Record<string, unknown>>("requests", "request-isolated.json");
   const config = await loadFixtureJson<OpenClawConfig>("configs", "empty-openclaw.json");
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-apply-"));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-multi-bot-config-apply-"));
   const configPath = path.join(tempDir, "openclaw.json");
   await writeJsonFileAtomic(configPath, config);
   const requestPath = path.join(tempDir, "request.json");
@@ -167,7 +167,7 @@ test("merge only changes agents channels bindings and session", async () => {
     bindings: [],
     session: {}
   };
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-scope-"));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-multi-bot-config-scope-"));
   const configPath = path.join(tempDir, "openclaw.json");
   await writeJsonFileAtomic(configPath, config);
   const requestPath = path.join(tempDir, "request.json");
@@ -190,8 +190,8 @@ test("merge only changes agents channels bindings and session", async () => {
 test("copied skill directory can still execute plan_config wrapper", async () => {
   const requestFixture = await loadFixtureJson<Record<string, unknown>>("requests", "request-isolated.json");
   const config = await loadFixtureJson<OpenClawConfig>("configs", "empty-openclaw.json");
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-bot-config-copy-"));
-  const copiedSkillRoot = path.join(tempDir, "skills", "openclaw-bot-config");
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-multi-bot-config-copy-"));
+  const copiedSkillRoot = path.join(tempDir, "skills", "openclaw-multi-bot-config");
   await fs.cp(skillRoot, copiedSkillRoot, {
     recursive: true,
     filter: (source) => {

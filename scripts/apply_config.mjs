@@ -9,7 +9,7 @@ try {
   const module = await import(entry);
   await module.main();
 } catch (error) {
-  console.error(`openclaw-bot-config: unable to run apply_config (${error instanceof Error ? error.message : String(error)})`);
+  console.error(`openclaw-multi-bot-config: unable to run apply_config (${error instanceof Error ? error.message : String(error)})`);
   console.error("Build the skill first with `pnpm --dir openclaw-multi-bot-config build`.");
   process.exit(10);
 }
